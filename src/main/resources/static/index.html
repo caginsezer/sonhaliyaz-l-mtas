@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERSS - Enterprise Hastane Bilgi Sistemi</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Sürüm parametresi (Cache kırmak için) -->
+    <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+    
+    <!-- GİRİŞ EKRANI (LOGIN OVERLAY) -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-box glass-panel">
+            <div class="text-center mb-4">
+                <span class="material-icons-round logo-icon" style="font-size: 56px;">local_hospital</span>
+                <h2 style="color: var(--text-main); font-weight: 800; margin-top: 10px;">Enterprise HIS</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Yetkili Personel Girişi</p>
+            </div>
+            <form id="loginForm" class="enterprise-form">
+                <div class="form-group">
+                    <label>Kullanıcı Adı</label>
+                    <div class="input-with-icon">
+                        <span class="material-icons-round">person</span>
+                        <input type="text" id="loginUser" placeholder="Örn: admin" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>Şifre</label>
+                    <div class="input-with-icon">
+                        <span class="material-icons-round">lock</span>
+                        <input type="password" id="loginPass" placeholder="••••" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100" style="margin-top: 1.5rem; padding: 14px; font-size: 1.1rem;">
+                    <span class="material-icons-round">login</span> Sisteme Giriş Yap
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Arka plan efektleri (Enterprise Clinical White/Gray/Blue) -->
+    <div class="bg-gradient-primary"></div>
+    <div class="bg-gradient-secondary"></div>
+
+    <div class="app-container" id="appContainer" style="display: none;">
+        
+        <!-- SIDEBAR (Sol Menü) -->
+        <aside class="sidebar glass-panel">
+            <div class="logo-container">
+                <span class="material-icons-round logo-icon">local_hospital</span>
+                <div class="logo-text">
+                    <h1>MedPulse <span class="text-accent">HIS</span></h1>
+                    <span class="logo-subtext">Enterprise Edition</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <!-- Data-target nitelikleri SPA router'ı için kullanılacak -->
+                <a href="#" class="nav-item active" data-target="view-dashboard">
+                    <span class="material-icons-round">dashboard</span>
+                    <span>Ana Panel</span>
+                </a>
+                <a href="#" class="nav-item" data-target="view-triage">
+                    <span class="material-icons-round">emergency</span>
+                    <span>Triyaj (Triage)</span>
+                </a>
+                <a href="#" class="nav-item" data-target="view-patients">
+                    <span class="material-icons-round">people</span>
+                    <span>Hasta Takibi</span>
+                </a>
+                <a href="#" class="nav-item" data-target="view-resources">
+                    <span class="material-icons-round">medical_information</span>
+                    <span>Personel & Kaynak</span>
+                </a>
+                <a href="#" class="nav-item" data-target="view-settings">
+                    <span class="material-icons-round">settings</span>
+                    <span>Simülasyon Ayarları</span>
+                </a>
+                <a href="#" class="nav-item" data-target="view-mission">
+                    <span class="material-icons-round">auto_awesome</span>
+                    <span>Vizyon & Misyon</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sim-status-box">
+                    <div class="status-indicator">
+                        <span class="dot active" id="simDot"></span>
+                        <span id="simStatusText">SİSTEM AKTİF</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT (Sağ Taraf) -->
+        <main class="main-content">
+            
+            <!-- TOPBAR -->
+            <header class="topbar glass-panel">
+                <div class="time-display">
+                    <span class="material-icons-round">schedule</span>
+                    <span id="liveClock">00:00:00</span>
+                </div>
+                <div class="user-profile">
+                    <div class="user-info">
+                        <span class="user-name">Dr. Yönetici</span>
+                        <span class="user-role">Sistem Yöneticisi</span>
+                    </div>
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Admin" class="avatar">
+                </div>
+            </header>
+
+            <!-- VIEWS CONTAINER (SPA Yapısı) -->
+            <div class="views-container">
+
+                <!-- 1. DASHBOARD VIEW -->
+                <section id="view-dashboard" class="view-section active">
+                    <div class="page-header">
+                        <h2>Genel Bakış (Ana Panel)</h2>
+                        <p class="text-muted">Hastanenin anlık durum ve istatistikleri.</p>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card glass-panel border-red">
+                            <div class="stat-icon bg-red-light">
+                                <span class="material-icons-round text-red">hourglass_empty</span>
+                            </div>
+                            <div class="stat-details">
+                                <h3>Bekleyen & Karantina</h3>
+                                <h2 id="statWaiting">0</h2>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-panel border-blue">
+                            <div class="stat-icon bg-blue-light">
+                                <span class="material-icons-round text-blue">healing</span>
+                            </div>
+                            <div class="stat-details">
+                                <h3>Tedavisi Sürenler</h3>
+                                <h2 id="statTreating">0</h2>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-panel border-green">
+                            <div class="stat-icon bg-green-light">
+                                <span class="material-icons-round text-green">person_outline</span>
+                            </div>
+                            <div class="stat-details">
+                                <h3>Boşta / Toplam Doktor</h3>
+                                <h2><span id="statDoctors">0</span> / <span id="statTotalDocs">0</span></h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid mt-4">
+                        <div class="panel glass-panel chart-panel">
+                            <div class="panel-header">
+                                <h3 class="panel-title"><span class="material-icons-round">pie_chart</span> Anlık Triyaj Dağılımı</h3>
+                            </div>
+                            <div class="panel-body">
+                                <canvas id="triageChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="panel glass-panel">
+                            <div class="panel-header">
+                                <h3 class="panel-title"><span class="material-icons-round">terminal</span> Canlı Sistem Logları</h3>
+                            </div>
+                            <div class="panel-body terminal" id="systemLogs">
+                                <!-- Loglar buraya eklenecek -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. TRIAGE VIEW -->
+                <section id="view-triage" class="view-section">
+                    <div class="page-header">
+                        <h2>Acil Triyaj Masası</h2>
+                        <p class="text-muted">Yeni hasta kayıt işlemleri.</p>
+                    </div>
+
+                    <div class="triage-container">
+                        <div class="panel glass-panel">
+                            <div class="panel-header">
+                                <h3 class="panel-title"><span class="material-icons-round">how_to_reg</span> Hasta Kabul Formu</h3>
+                            </div>
+                            <div class="panel-body">
+                                <form id="admitForm" class="enterprise-form">
+                                    <div class="form-group">
+                                        <label>Ad Soyad</label>
+                                        <div class="input-with-icon">
+                                            <span class="material-icons-round">badge</span>
+                                            <input type="text" id="name" required placeholder="Örn: Ali Yılmaz">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group col-4">
+                                            <label>Yaş</label>
+                                            <div class="input-with-icon">
+                                                <span class="material-icons-round">cake</span>
+                                                <input type="number" id="age" required min="1" max="120" placeholder="30">
+                                            </div>
+                                        </div>
+                                        <div class="form-group col-8">
+                                            <label>Şikayet</label>
+                                            <div class="input-with-icon">
+                                                <span class="material-icons-round">sick</span>
+                                                <input type="text" id="complaint" required placeholder="Ateş, baş ağrısı...">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Triyaj Kodu (Aciliyet)</label>
+                                        <div class="triyaj-select">
+                                            <label class="triyaj-btn red">
+                                                <input type="radio" name="urgency" value="RED" required>
+                                                <span class="material-icons-round">error</span> Kırmızı Kod
+                                            </label>
+                                            <label class="triyaj-btn yellow">
+                                                <input type="radio" name="urgency" value="YELLOW">
+                                                <span class="material-icons-round">warning</span> Sarı Kod
+                                            </label>
+                                            <label class="triyaj-btn green">
+                                                <input type="radio" name="urgency" value="GREEN" checked>
+                                                <span class="material-icons-round">check_circle</span> Yeşil Kod
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
+                                        <span class="material-icons-round">save</span> Sisteme Kaydet
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. PATIENT TRACKING VIEW -->
+                <section id="view-patients" class="view-section">
+                    <div class="page-header">
+                        <h2>Hasta Takip Merkezi</h2>
+                        <p class="text-muted">Tüm hastaların anlık durum listeleri.</p>
+                    </div>
+
+                    <div class="lists-grid">
+                        <div class="panel glass-panel">
+                            <div class="panel-header">
+                                <h3 class="panel-title"><span class="material-icons-round">airline_seat_flat</span> Bekleyenler & Karantina</h3>
+                                <span class="badge" id="waitingCount">0</span>
+                            </div>
+                            <div class="panel-body list-container large-list" id="waitingList">
+                                <!-- JS ile dolacak -->
+                            </div>
+                        </div>
+
+                        <div class="panel glass-panel">
+                            <div class="panel-header">
+                                <h3 class="panel-title"><span class="material-icons-round">health_and_safety</span> Aktif Tedaviler</h3>
+                                <span class="badge badge-blue" id="treatingCount">0</span>
+                            </div>
+                            <div class="panel-body list-container large-list" id="treatingList">
+                                <!-- JS ile dolacak -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. STAFF & RESOURCES VIEW -->
+                <section id="view-resources" class="view-section">
+                    <div class="page-header">
+                        <h2>Personel ve Tıbbi Kaynaklar</h2>
+                        <p class="text-muted">Doktorların durumu ve depo envanteri.</p>
+                    </div>
+
+                    <div class="resources-grid">
+                        <div class="panel glass-panel">
+                            <div class="panel-header">
+                                <h3 class="panel-title"><span class="material-icons-round">medication</span> Tıbbi Envanter</h3>
+                                <button id="restockBtn" class="btn btn-outline btn-sm">Tedarik Talebi</button>
+                            </div>
+                            <div class="panel-body" id="inventoryGrid">
+                                <!-- JS ile dolacak -->
+                            </div>
+                        </div>
+
+                        <div class="panel glass-panel">
+                            <div class="panel-header">
+                                <h3 class="panel-title"><span class="material-icons-round">groups</span> Doktor Kadrosu</h3>
+                            </div>
+                            <div class="panel-body list-container" id="doctorsList">
+                                <!-- JS ile dolacak -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. SIMULATION SETTINGS VIEW -->
+                <section id="view-settings" class="view-section">
+                    <div class="page-header">
+                        <h2>Simülasyon Motoru Ayarları</h2>
+                        <p class="text-muted">Sistemin akışını ve acil durumları buradan kontrol edin.</p>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="panel glass-panel">
+                            <div class="panel-header">
+                                <h3 class="panel-title text-red"><span class="material-icons-round">coronavirus</span> Salgın / Karantina Modu</h3>
+                            </div>
+                            <div class="panel-body text-center p-4">
+                                <div class="setting-item" style="text-align: left;">
+                                    <div class="setting-info">
+                                        <h4>Karantina Bölgesi Aktifliği</h4>
+                                        <p>Açıkken tüm bulaşıcı hastalar karantinaya alınır.</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="quarantineToggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <hr class="divider">
+                                <p class="text-muted mb-4">Sisteme anında 10 enfekte hasta (Kırmızı Kod) enjekte eder.</p>
+                                <button id="epidemicBtn" class="btn btn-danger btn-xl">
+                                    <span class="material-icons-round">warning</span> SALGIN DALGASI BAŞLAT
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="panel glass-panel">
+                            <div class="panel-header">
+                                <h3 class="panel-title"><span class="material-icons-round">settings_power</span> Motor Kontrolleri</h3>
+                            </div>
+                            <div class="panel-body p-4">
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <h4>Zaman Akışını Duraklat/Başlat</h4>
+                                        <p>Simülasyon tick'lerini (zamanlayıcıyı) dondurur.</p>
+                                    </div>
+                                    <button id="simToggleBtn" class="btn btn-outline">Duraklat</button>
+                                </div>
+                                <hr class="divider">
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <h4>Otonom Hasta Üretici</h4>
+                                        <p>Sistem rastgele aralıklarla otomatik hasta kabul eder.</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="autoSpawnToggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 6. VIZYON VE MISYON VIEW -->
+                <section id="view-mission" class="view-section">
+                    <div class="page-header">
+                        <h2>Vizyon ve Misyon</h2>
+                        <p class="text-muted">MedPulse Enterprise Health Systems</p>
+                    </div>
+
+                    <div class="panel glass-panel mb-4">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><span class="material-icons-round">visibility</span> Vizyonumuz</h3>
+                        </div>
+                        <div class="panel-body p-4">
+                            <p style="font-size: 1.1rem; line-height: 1.7; color: var(--text-main);">
+                                Sağlık teknolojilerinde küresel bir standart oluşturmak; hastanelerin acil servislerini, ileri düzey yazılım mimarileri ve yapay zeka destekli simülasyon algoritmalarıyla donatarak insan hayatını kurtarma süreçlerini hatasız, şeffaf ve anlık hale getirmektir. Geleceğin dijital sağlık kampüslerini bugünden inşa ediyoruz.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="panel glass-panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><span class="material-icons-round">track_changes</span> Misyonumuz</h3>
+                        </div>
+                        <div class="panel-body p-4">
+                            <p style="font-size: 1.1rem; line-height: 1.7; color: var(--text-main);">
+                                Sağlık çalışanlarının omuzlarındaki operasyonel yükü hafifletecek kusursuz sistemler üretmek. En yoğun anlarda bile kaynak yönetimini, hasta triyajını ve personel atamalarını sıfır hatayla gerçekleştirebilen; estetik (UI) ve mantıksal (Yazılım Tasarım Desenleri) olarak mükemmeliyetçi yazılım çözümleri sunmaktır. Biz, teknolojinin şifa dağıttığına inanıyoruz.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+            </div> <!-- /views-container -->
+        </main>
+    </div>
+
+    <!-- Modal (Fatura / Detay) -->
+    <div id="medModal" class="modal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3 id="modalTitle" class="panel-title"><span class="material-icons-round">receipt_long</span> Fatura Detayı</h3>
+                <button class="icon-btn" id="closeModal"><span class="material-icons-round">close</span></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Dinamik içerik -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="app.js?v=3"></script>
+</body>
+</html>
