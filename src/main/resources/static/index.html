@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Sürüm parametresi (Cache kırmak için) -->
-    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
     
@@ -114,12 +114,18 @@
                     <span class="material-icons-round">schedule</span>
                     <span id="liveClock">00:00:00</span>
                 </div>
-                <div class="user-profile">
+                <div class="user-profile dropdown-container">
                     <div class="user-info">
                         <span class="user-name">Dr. Yönetici</span>
                         <span class="user-role">Sistem Yöneticisi</span>
                     </div>
                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Admin" class="avatar">
+                    <div class="dropdown-menu">
+                        <button id="logoutBtn" class="dropdown-item">
+                            <span class="material-icons-round" style="color: var(--text-red);">logout</span> 
+                            <span style="color: var(--text-red); font-weight: 600;">Sistemden Çıkış Yap</span>
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -274,6 +280,17 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- TABURCU OLANLAR VE FATURALAR -->
+                    <div class="panel glass-panel mt-4" style="margin-top: 1.5rem;">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><span class="material-icons-round">receipt_long</span> Taburcu Edilenler & Fatura Merkezi</h3>
+                            <span class="badge" style="background-color: var(--green); color: white;" id="dischargedCount">0</span>
+                        </div>
+                        <div class="panel-body list-container large-list" id="dischargedList">
+                            <!-- JS ile dolacak -->
+                        </div>
+                    </div>
                 </section>
 
                 <!-- 4. STAFF & RESOURCES VIEW -->
@@ -414,6 +431,6 @@
     <!-- Toast Notifications -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=5"></script>
 </body>
 </html>

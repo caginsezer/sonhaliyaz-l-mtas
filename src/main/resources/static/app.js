@@ -3,6 +3,9 @@ const API_BASE = "/api/emergency";
 let chartInstance = null;
 let simInterval = null;
 
+let knownTreatingIds = new Set();
+let knownDischargedIds = new Set();
+
 // ==========================================
 // 1. UYGULAMA BAŞLATMA (INIT)
 // ==========================================
@@ -136,6 +139,39 @@ function bindEventsSafely() {
     if(closeModalBtn) {
         closeModalBtn.addEventListener("click", closeModal);
     }
+
+    // 3.4 Çıkış Yap (Logout)
+    const logoutBtn = document.getElementById("logoutBtn");
+    if(logoutBtn) {
+        logoutBtn.addEventListener("click", handleLogout);
+        console.log("Çıkış Yap butonu bağlandı.");
+    }
+}
+
+// Çıkış İşlemi
+function handleLogout() {
+    // Ana uygulamayı gizle
+    const app = document.getElementById("appContainer");
+    app.style.opacity = "0";
+    
+    setTimeout(() => {
+        app.style.display = "none";
+        
+        // Giriş ekranını göster
+        const overlay = document.getElementById("loginOverlay");
+        overlay.style.display = "flex";
+        
+        // Formu temizle
+        const loginForm = document.getElementById("loginForm");
+        if(loginForm) loginForm.reset();
+        
+        setTimeout(() => {
+            overlay.style.opacity = "1";
+        }, 50);
+        
+        showToast("Sistemden güvenli çıkış yapıldı.", "success");
+        logToTerminal("SİSTEM ÇIKIŞI: Kullanıcı oturumu sonlandırdı.");
+    }, 600);
 }
 
 // ==========================================
@@ -323,9 +359,10 @@ function fetchData() {
         fetch(`${API_BASE}/patients/waiting`).then(r => r.json()),
         fetch(`${API_BASE}/patients/quarantined`).then(r => r.json()),
         fetch(`${API_BASE}/patients/treating`).then(r => r.json()),
+        fetch(`${API_BASE}/patients/discharged`).then(r => r.json()),
         fetch(`${API_BASE}/doctors`).then(r => r.json()),
         fetch(`${API_BASE}/inventory`).then(r => r.json())
-    ]).then(([waiting, quarantined, treating, doctors, inventory]) => {
+    ]).then(([waiting, quarantined, treating, discharged, doctors, inventory]) => {
         
         // 1. Dashboard Stat Güncellemeleri
         const totalWaiting = waiting.length + quarantined.length;
@@ -339,9 +376,32 @@ function fetchData() {
         if(document.getElementById("statDoctors")) document.getElementById("statDoctors").innerText = availableDocs;
         if(document.getElementById("statTotalDocs")) document.getElementById("statTotalDocs").innerText = doctors.length;
         
+        if(document.getElementById("dischargedCount")) document.getElementById("dischargedCount").innerText = discharged.length;
+
+        // --- CANLI LOGLAMA MANTIĞI ---
+        treating.forEach(p => {
+            if (!knownTreatingIds.has(p.id)) {
+                knownTreatingIds.add(p.id);
+                const docName = p.assignedDoctor ? p.assignedDoctor.name : "Bir doktor";
+                logToTerminal(`SİSTEM: ${p.name} adlı hasta ${docName} tarafından tedaviye alındı.`);
+            }
+        });
+
+        discharged.forEach(p => {
+            if (!knownDischargedIds.has(p.id)) {
+                knownDischargedIds.add(p.id);
+                // Eğer tedavi listesinde varsa oradan çıkaralım
+                if(knownTreatingIds.has(p.id)) knownTreatingIds.delete(p.id);
+                
+                logToTerminal(`TABURCU: ${p.name} taburcu edildi. (${p.finalBill})`);
+            }
+        });
+        // -----------------------------
+
         // 2. Arayüz Listelerini Render Et
         renderWaitingList(waiting, quarantined);
         renderTreatingList(treating);
+        renderDischargedList(discharged);
         renderDoctorsList(doctors);
         renderInventory(inventory);
         
@@ -430,6 +490,38 @@ function renderTreatingList(treating) {
     
     if(html === "") {
         html = `<div class="p-4 text-center text-muted">Tedavide hasta bulunmuyor.</div>`;
+    }
+    
+    list.innerHTML = html;
+}
+
+function renderDischargedList(discharged) {
+    const list = document.getElementById("dischargedList");
+    if(!list) return;
+    
+    let html = "";
+    discharged.forEach(p => {
+        let billText = p.finalBill ? p.finalBill : "Fatura Çıkarılamadı";
+        html += `
+            <div class="list-item">
+                <div class="patient-info">
+                    <div class="urgency-dot dot-green"></div>
+                    <div>
+                        <div class="p-name">${p.name} <span style="font-size: 0.8rem; color: var(--green);">(Taburcu)</span></div>
+                        <div class="p-desc">${p.complaint}</div>
+                    </div>
+                </div>
+                <div class="treatment-info" style="flex: 2; text-align: right;">
+                    <div style="font-size: 0.85rem; color: var(--text-main); font-weight: 500;">
+                        ${billText.replace("|", "<br><strong style='color:var(--accent);'>")}</strong>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    if(html === "") {
+        html = `<div class="p-4 text-center text-muted">Henüz taburcu edilen hasta bulunmuyor.</div>`;
     }
     
     list.innerHTML = html;

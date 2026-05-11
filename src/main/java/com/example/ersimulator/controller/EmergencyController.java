@@ -55,6 +55,11 @@ public class EmergencyController {
         return ResponseEntity.ok(emergencyRoomFacade.getInTreatmentPatients());
     }
 
+    @GetMapping("/patients/discharged")
+    public ResponseEntity<List<Patient>> getDischargedPatients() {
+        return ResponseEntity.ok(emergencyRoomFacade.getDischargedPatients());
+    }
+
     @GetMapping("/doctors")
     public ResponseEntity<List<Doctor>> getAllDoctors() {
         return ResponseEntity.ok(emergencyRoomFacade.getAllDoctors());

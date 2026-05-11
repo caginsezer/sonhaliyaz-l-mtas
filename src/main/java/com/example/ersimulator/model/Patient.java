@@ -41,7 +41,25 @@ public class Patient {
         this.name = name;
         this.age = age;
         this.complaint = complaint;
-        this.urgencyLevel = urgencyLevel;
+        this.urgencyLevel = urgencyLevel != null ? urgencyLevel.toUpperCase() : null;
         this.arrivalTime = LocalDateTime.now();
+
+        if (this.urgencyLevel == null) {
+            return;
+        }
+
+        switch (this.urgencyLevel) {
+            case "RED":
+                this.treatmentTimeRemaining = 1800; 
+                break;
+            case "YELLOW":
+                this.treatmentTimeRemaining = 900;
+                break;
+            case "GREEN":
+                this.treatmentTimeRemaining = 300;
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown Patient Type: " + urgencyLevel);
+        }
     }
 }

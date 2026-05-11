@@ -2,7 +2,7 @@ package com.example.ersimulator.pattern.facade;
 
 import com.example.ersimulator.model.Doctor;
 import com.example.ersimulator.model.Patient;
-import com.example.ersimulator.pattern.factory.PatientFactory;
+
 import com.example.ersimulator.pattern.observer.EmergencyNotifier;
 import com.example.ersimulator.service.SimulationManager;
 import com.example.ersimulator.service.MedicalInventoryService;
@@ -46,7 +46,7 @@ public class EmergencyRoomFacade {
         }
 
         // 3. Factory Pattern: Hasta oluştur
-        Patient newPatient = PatientFactory.createPatient(name, age, complaint, urgencyLevel);
+        Patient newPatient = new Patient(name, age, complaint, urgencyLevel);
         
         // Otonom Karantina Mantığı Değiştirildi: Kullanıcı Salgın (Epidemic) modunu açtıysa
         // Sadece bulaşıcı şikayeti olanlar Karantinaya düşer
@@ -135,6 +135,10 @@ public class EmergencyRoomFacade {
             
             // 5. Decorator Pattern: Fatura ve tedavi modülleri
             com.example.ersimulator.pattern.decorator.Treatment treatment = new com.example.ersimulator.pattern.decorator.BasicTreatment();
+            
+            // Her hastaya standart yatak ücreti ekliyoruz
+            treatment = new com.example.ersimulator.pattern.decorator.BedFeeDecorator(treatment);
+            
             String complaint = patient.getComplaint().toLowerCase();
 
             if ("RED".equalsIgnoreCase(patient.getUrgencyLevel())) {
@@ -226,7 +230,7 @@ public class EmergencyRoomFacade {
         }
 
         for (int i = 0; i < count; i++) {
-            Patient newPatient = PatientFactory.createPatient("Salgın Vakası " + (i + 1), 30 + (int)(Math.random() * 40), "Grip (Salgın Şüphesi)", "RED");
+            Patient newPatient = new Patient("Salgın Vakası " + (i + 1), 30 + (int)(Math.random() * 40), "Grip (Salgın Şüphesi)", "RED");
             newPatient.setCurrentStateStr("QUARANTINED");
             patientRepository.save(newPatient);
             
@@ -242,5 +246,9 @@ public class EmergencyRoomFacade {
         return lower.contains("ateş") || lower.contains("grip") || 
                lower.contains("öksürük") || lower.contains("enfeksiyon") || 
                lower.contains("salgın") || lower.contains("covid");
+    }
+
+    public List<Patient> getDischargedPatients() {
+        return patientRepository.findByCurrentStateStr("DISCHARGED");
     }
 }
