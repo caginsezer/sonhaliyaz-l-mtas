@@ -17,6 +17,9 @@ public class GameLoopScheduler {
     private PatientRepository patientRepository;
 
     @Autowired
+    private com.example.ersimulator.repository.DoctorRepository doctorRepository;
+
+    @Autowired
     private EmergencyRoomFacade facade;
 
     @Autowired
@@ -42,6 +45,20 @@ public class GameLoopScheduler {
         List<Patient> waitingPatients = patientRepository.findByCurrentStateStr("WAITING");
         if (!waitingPatients.isEmpty()) {
             facade.assignDoctorToNextPatient();
+        }
+        
+        // Doktorların otomatik dinlenme/enerji yenileme döngüsü
+        for (com.example.ersimulator.model.Doctor doc : doctorRepository.findAll()) {
+            if (doc.isResting()) {
+                int newEnergy = Math.min(100, doc.getEnergyLevel() + 5);
+                doc.setEnergyLevel(newEnergy);
+                if (newEnergy >= 100) {
+                    doc.setResting(false);
+                    doc.setAvailable(true); // Artık müsait
+                    facade.assignDoctorToNextPatient(); // Uyandığı an boşta hasta varsa bakar
+                }
+                doctorRepository.save(doc);
+            }
         }
     }
 }

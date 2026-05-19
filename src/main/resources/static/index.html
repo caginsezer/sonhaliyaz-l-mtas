@@ -262,7 +262,7 @@
                     <div class="lists-grid">
                         <div class="panel glass-panel">
                             <div class="panel-header">
-                                <h3 class="panel-title"><span class="material-icons-round">airline_seat_flat</span> Bekleyenler & Karantina</h3>
+                                <h3 class="panel-title"><span class="material-icons-round">airline_seat_flat</span> Bekleyenler</h3>
                                 <span class="badge" id="waitingCount">0</span>
                             </div>
                             <div class="panel-body list-container large-list" id="waitingList">
@@ -270,9 +270,19 @@
                             </div>
                         </div>
 
-                        <div class="panel glass-panel">
-                            <div class="panel-header">
-                                <h3 class="panel-title"><span class="material-icons-round">health_and_safety</span> Aktif Tedaviler</h3>
+                        <div class="panel glass-panel border-red">
+                            <div class="panel-header" style="background: rgba(225, 29, 72, 0.05);">
+                                <h3 class="panel-title text-red"><span class="material-icons-round">coronavirus</span> Karantina</h3>
+                                <span class="badge" style="background: var(--red); color: white;" id="quarantineCount">0</span>
+                            </div>
+                            <div class="panel-body list-container large-list" id="quarantineList">
+                                <!-- JS ile dolacak -->
+                            </div>
+                        </div>
+
+                        <div class="panel glass-panel border-blue">
+                            <div class="panel-header" style="background: rgba(37, 99, 235, 0.05);">
+                                <h3 class="panel-title" style="color: var(--accent);"><span class="material-icons-round">health_and_safety</span> Aktif Tedaviler</h3>
                                 <span class="badge badge-blue" id="treatingCount">0</span>
                             </div>
                             <div class="panel-body list-container large-list" id="treatingList">

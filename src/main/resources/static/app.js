@@ -367,7 +367,8 @@ function fetchData() {
         // 1. Dashboard Stat Güncellemeleri
         const totalWaiting = waiting.length + quarantined.length;
         if(document.getElementById("statWaiting")) document.getElementById("statWaiting").innerText = totalWaiting;
-        if(document.getElementById("waitingCount")) document.getElementById("waitingCount").innerText = totalWaiting;
+        if(document.getElementById("waitingCount")) document.getElementById("waitingCount").innerText = waiting.length;
+        if(document.getElementById("quarantineCount")) document.getElementById("quarantineCount").innerText = quarantined.length;
         
         if(document.getElementById("statTreating")) document.getElementById("statTreating").innerText = treating.length;
         if(document.getElementById("treatingCount")) document.getElementById("treatingCount").innerText = treating.length;
@@ -399,10 +400,11 @@ function fetchData() {
         // -----------------------------
 
         // 2. Arayüz Listelerini Render Et
-        renderWaitingList(waiting, quarantined);
+        renderWaitingList(waiting);
+        renderQuarantineList(quarantined);
         renderTreatingList(treating);
         renderDischargedList(discharged);
-        renderDoctorsList(doctors);
+        renderDoctorsList(doctors, treating);
         renderInventory(inventory);
         
         // 3. Grafiği Güncelle
@@ -423,26 +425,12 @@ function getDotClass(urgency) {
     return 'dot-green';
 }
 
-function renderWaitingList(waiting, quarantined) {
+function renderWaitingList(waiting) {
     const list = document.getElementById("waitingList");
     if(!list) return;
     
     let html = "";
     
-    quarantined.forEach(p => {
-        html += `
-            <div class="list-item quarantined-item">
-                <div class="patient-info">
-                    <div class="urgency-dot dot-yellow"></div>
-                    <div>
-                        <div class="p-name"><span class="material-icons-round text-red" style="font-size:16px; vertical-align:middle;">coronavirus</span> ${p.name} (KARANTİNA)</div>
-                        <div class="p-desc">${p.complaint}</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-
     waiting.forEach(p => {
         html += `
             <div class="list-item">
@@ -459,6 +447,33 @@ function renderWaitingList(waiting, quarantined) {
     
     if(html === "") {
         html = `<div class="p-4 text-center text-muted">Bekleyen hasta bulunmuyor.</div>`;
+    }
+    
+    list.innerHTML = html;
+}
+
+function renderQuarantineList(quarantined) {
+    const list = document.getElementById("quarantineList");
+    if(!list) return;
+    
+    let html = "";
+    
+    quarantined.forEach(p => {
+        html += `
+            <div class="list-item quarantined-item">
+                <div class="patient-info">
+                    <div class="urgency-dot dot-red"></div>
+                    <div>
+                        <div class="p-name"><span class="material-icons-round text-red" style="font-size:16px; vertical-align:middle;">coronavirus</span> ${p.name}</div>
+                        <div class="p-desc">${p.complaint}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    if(html === "") {
+        html = `<div class="p-4 text-center text-muted">Karantina bölgesi temiz.</div>`;
     }
     
     list.innerHTML = html;
@@ -527,7 +542,7 @@ function renderDischargedList(discharged) {
     list.innerHTML = html;
 }
 
-function renderDoctorsList(doctors) {
+function renderDoctorsList(doctors, treating) {
     const list = document.getElementById("doctorsList");
     if(!list) return;
     
@@ -536,6 +551,16 @@ function renderDoctorsList(doctors) {
         const statusIcon = d.available ? 'check_circle' : (d.resting ? 'bed' : 'healing');
         const statusColor = d.available ? 'var(--green)' : (d.resting ? 'var(--yellow)' : 'var(--accent)');
         const statusText = d.available ? 'Müsait' : (d.resting ? 'Dinleniyor' : 'Tedavide');
+        
+        let extraInfo = `Baktığı Hasta: ${d.patientsTreated}`;
+        if (!d.available && !d.resting && treating) {
+            const patient = treating.find(p => p.assignedDoctor && p.assignedDoctor.id === d.id);
+            if (patient) {
+                extraInfo = `<span style="color:var(--accent); font-weight:700;">${patient.treatmentTimeRemaining}s sonra boşalacak</span> | Toplam: ${d.patientsTreated}`;
+            }
+        } else if (d.resting) {
+            extraInfo = `<span style="color:var(--yellow); font-weight:700;">Enerji doluyor...</span> | Toplam: ${d.patientsTreated}`;
+        }
         
         html += `
             <div class="list-item">
@@ -552,7 +577,7 @@ function renderDoctorsList(doctors) {
                     <span style="color:${statusColor}; font-weight:700; font-size:0.85rem; display:flex; align-items:center; gap:4px; justify-content:flex-end;">
                         <span class="material-icons-round" style="font-size:16px;">${statusIcon}</span> ${statusText}
                     </span>
-                    <span class="doc-name">Baktığı Hasta: ${d.patientsTreated}</span>
+                    <span class="doc-name">${extraInfo}</span>
                 </div>
             </div>
         `;

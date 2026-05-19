@@ -3,7 +3,7 @@ package com.example.ersimulator.pattern.facade;
 import com.example.ersimulator.model.Doctor;
 import com.example.ersimulator.model.Patient;
 
-import com.example.ersimulator.pattern.observer.EmergencyNotifier;
+
 import com.example.ersimulator.service.SimulationManager;
 import com.example.ersimulator.service.MedicalInventoryService;
 import com.example.ersimulator.pattern.state.InTreatmentState;
@@ -26,9 +26,6 @@ public class EmergencyRoomFacade {
 
     @Autowired
     private DoctorRepository doctorRepository;
-
-    @Autowired
-    private EmergencyNotifier emergencyNotifier;
 
     @Autowired
     private PriorityTriageStrategy priorityTriageStrategy;
@@ -59,9 +56,9 @@ public class EmergencyRoomFacade {
         
         patientRepository.save(newPatient);
 
-        // 4. Observer Pattern: Kırmızı kodda bildirim yap
+        // Kırmızı kodda bildirim yap (Observer yerine doğrudan loglama)
         if ("RED".equalsIgnoreCase(urgencyLevel)) {
-            emergencyNotifier.notifyObservers(newPatient);
+            System.out.println("🚨 ACİL DURUM: " + newPatient.getName() + " için Kırmızı Kod!");
         }
         
         assignDoctorToPatient(newPatient);
@@ -234,8 +231,8 @@ public class EmergencyRoomFacade {
             newPatient.setCurrentStateStr("QUARANTINED");
             patientRepository.save(newPatient);
             
-            // 4. Observer Pattern
-            emergencyNotifier.notifyObservers(newPatient);
+            // Salgın bildirimi (Observer yerine doğrudan loglama)
+            System.out.println("🚨 SALGIN ALARMI: " + newPatient.getName() + " tespit edildi!");
             assignDoctorToPatient(newPatient);
         }
     }

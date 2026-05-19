@@ -251,7 +251,7 @@ body {
 /* Dashboard Grids */
 .dashboard-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
 .triage-container { max-width: 800px; margin: 0 auto; }
-.lists-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.lists-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
 .resources-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 
