@@ -4,37 +4,57 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  TIBBİ ENVANTER SERVİSİ (MedicalInventoryService)               ║
+// ║  Bu servis, hastanenin ilaç ve tıbbi malzeme deposudur.          ║
+// ║  FACADE deseninin ALT SİSTEMİDİR (Subsystem).                   ║
+// ║  Facade, doktor atamadan önce bu servisten stok sorgular:       ║
+// ║  - hasStockForRed() / hasStockForYellow() / hasStockForGreen()   ║
+// ║  Stok varsa malzemeyi tüketir: consumeForRed() vs.              ║
+// ║  Buradaki malzemeler DECORATOR desenindeki faturalandırma       ║
+// ║  öğeleriyle (Kan, Serum, Antibiyotik vb.) doğrudan ilişkilidir. ║
+// ╚══════════════════════════════════════════════════════════════════╝
+@Service // Spring bu sınıfı Singleton bir Bean olarak yönetir
 public class MedicalInventoryService {
-    // Başlangıç değerleri gerçekçi acil servis seviyelerine kalibre edildi
-    private int bloodUnits = 20;
-    private int serums = 50;
-    private int syringes = 100;
-    private int painkillers = 50;
-    private int bandages = 80;
-    private int antibiotics = 40;
-    private int vaccines = 30;
+    
+    // Tıbbi malzeme stokları (Başlangıç değerleri gerçekçi acil servis seviyelerine kalibre edildi)
+    private int bloodUnits = 20;    // Kan Ünitesi (Kırmızı Kod ve BloodUnitDecorator ile ilişkili)
+    private int serums = 50;        // Serum (Kırmızı/Sarı Kod ve SerumDecorator ile ilişkili)
+    private int syringes = 100;     // Şırınga (Tüm enjeksiyonlarda kullanılır)
+    private int painkillers = 50;    // Ağrı Kesici (Sarı Kod ve PainkillerDecorator ile ilişkili)
+    private int bandages = 80;      // Bandaj (Yeşil Kod ile ilişkili)
+    private int antibiotics = 40;   // Antibiyotik (Enfeksiyon vakaları ve AntibioticDecorator ile ilişkili)
+    private int vaccines = 30;      // Aşı (Isırık/Kesik vakaları ve VaccineDecorator ile ilişkili)
 
+    // ─── KIRMIZI KOD STOK KONTROLÜ ───
+    // Kırmızı kod için: 2 Kan, 1 Serum, 1 Şırınga ve 1 Antibiyotik gerekir
     public boolean hasStockForRed() {
         return bloodUnits >= 2 && serums >= 1 && syringes >= 1 && antibiotics >= 1;
     }
 
+    // ─── KIRMIZI KOD STOK TÜKETİMİ ───
     public void consumeForRed() {
         bloodUnits -= 2; serums -= 1; syringes -= 1; antibiotics -= 1;
     }
 
+    // ─── SARI KOD STOK KONTROLÜ ───
+    // Sarı kod için: 1 Serum, 1 Ağrı Kesici, 1 Şırınga ve 1 Antibiyotik gerekir
     public boolean hasStockForYellow() {
         return serums >= 1 && painkillers >= 1 && syringes >= 1 && antibiotics >= 1;
     }
 
+    // ─── SARI KOD STOK TÜKETİMİ ───
     public void consumeForYellow() {
         serums -= 1; painkillers -= 1; syringes -= 1; antibiotics -= 1;
     }
 
+    // ─── YEŞİL KOD STOK KONTROLÜ ───
+    // Yeşil kod için: Bandaj + Ağrı Kesici VEYA Aşı gerekir
     public boolean hasStockForGreen() {
         return (bandages >= 1 && painkillers >= 1) || vaccines >= 1;
     }
 
+    // ─── YEŞİL KOD STOK TÜKETİMİ ───
     public void consumeForGreen() {
         if (bandages >= 1) {
             bandages -= 1; painkillers -= 1;
@@ -43,6 +63,8 @@ public class MedicalInventoryService {
         }
     }
 
+    // ─── TEDARİK TALEBİ (Stokları Yenileme) ───
+    // Arayüzdeki "Tedarik Talebi" butonu tıklandığında çalışır
     public void restockAll() {
         this.bloodUnits += 100;
         this.serums += 200;
@@ -53,6 +75,8 @@ public class MedicalInventoryService {
         this.vaccines += 100;
     }
 
+    // ─── STOK DURUMUNU PAZARLA (API için Map formatında) ───
+    // Arayüzdeki "Tıbbi Envanter" panelini besleyen verileri hazırlar
     public Map<String, Integer> getInventoryStatus() {
         Map<String, Integer> status = new HashMap<>();
         status.put("bloodUnits", bloodUnits);
